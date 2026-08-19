@@ -12,7 +12,7 @@
 - 마지막 갱신: 2026-08-19 KST
 - 브랜치: `claude/code-review-md-files-ggzay6` (원격 `feature/youquiz-v1`에서 분기)
 - 마지막 검증된 커밋: 아직 없음 (커밋 예정)
-- 현재 단계: 응시·기록·오답·통계 화면 연결 완료, Firebase 실 연동 대기
+- 현재 단계: 응시·기록·오답·통계 화면과 인쇄 화면 구현 완료, Firebase 실 연동 대기
 
 ## 완료된 작업
 
@@ -27,19 +27,21 @@
 - `/api/attempts/[attemptId]` GET을 추가하고 `/quiz/[attemptId]` 응시 화면에서 답안 저장·현재 결과 보기·계속 풀기를 연결했다.
 - History, Review, Stats 화면을 인증 API에 연결했다 (오답 기록에 문항·해설을 함께 저장해 다시 조회하지 않도록 비정규화).
 - 클라이언트 번들에 서버 비밀 스키마가 섞이지 않도록 공개용 Firebase 설정 읽기를 `lib/public-env.ts`로 분리했다.
+- `/quiz/[attemptId]/print` 인쇄 화면(A4 문제지 + 정답지, 인쇄용 페이지 나눔 CSS)을 추가하고 응시 화면에서 연결했다.
+- Playwright 설정과 e2e 스모크 테스트를 추가했다 (미설정 상태의 홈·History·Review·Stats 화면 검증, 3개 통과). 크로스 오리진 개발 리소스 경고를 없애기 위해 `next.config.ts`에 `allowedDevOrigins`를 추가했다.
 
 ## 진행 중인 작업
 
-- PDF 인쇄 화면(A4 문제지·정답지)은 아직 구현하지 않았다.
 - Firebase와 Gemini·YouTube 실제 환경 변수는 아직 설정하지 않았다 (로컬 검증은 목/타입 수준까지만 완료).
 - Gemini `interactions.create` 실 API 호출은 실제 자격 증명으로 아직 검증하지 못했다 (구조화 출력 파싱까지 통합 테스트 필요).
-- Playwright e2e(`npm run test:e2e`)는 아직 실행하지 않았다.
+- Playwright e2e는 미설정(Firebase 미연동) 상태의 화면만 검증한다. 로그인 이후 골든 패스(응시·채점·기록)는 실 자격 증명 없이는 자동화할 수 없다.
+- 인쇄 화면은 브라우저의 실제 인쇄 미리보기로는 아직 확인하지 못했다 (수동 확인 필요).
 
 ## 다음 작업
 
 1. Firebase 프로젝트와 Vercel 환경 변수를 설정한 뒤, Gemini 실 호출로 `generateQuiz`/`gradeShortAnswers`의 `response_format` 계약을 실제 응답으로 검증한다.
-2. A4 문제지·선택형 정답지 인쇄 화면과 PDF 렌더링 검증을 추가한다.
-3. Playwright e2e로 로그인부터 응시·채점까지 골든 패스를 검증한다.
+2. 로그인 뒤 `/quiz/[attemptId]/print`를 브라우저 인쇄 미리보기로 확인하고 필요하면 페이지 나눔·여백을 조정한다.
+3. 실 자격 증명 확보 후 Playwright e2e를 로그인부터 응시·채점까지 골든 패스로 확장한다.
 
 ## 환경 설정
 
@@ -54,10 +56,11 @@
 - 단위 테스트: 16개 통과 확인
 - TypeScript 검사: 통과 확인
 - Next.js 16.3.1 Production build (Turbopack): 통과 확인
-- Playwright e2e: 미실행
+- Playwright e2e: 스모크 테스트 3개 통과 확인 (미설정 상태 화면만; 로그인 이후 플로우는 미검증)
 
 ## 작업 기록
 
 - 2026-08-18 KST | 초기 설정 | 기능 브랜치와 인계 기준 준비 | 다음: 테스트 작성
 - 2026-08-18 KST | 도메인·API·초기 UI | 단위 테스트 16개와 Next.js 15 build 통과 | 다음: 응시·기록·PDF 및 최신 의존성 재검증
 - 2026-08-19 KST | 코드 리뷰·버그 수정·응시 화면 | 대상 나이 5~20세로 조정, Gemini 응답 스키마 버그 등 4건 수정, 응시·기록·오답·통계 화면을 API에 연결, Next.js 16/ESLint 9 전체 검증 통과 | 다음: 실 Firebase·Gemini 연동 검증과 PDF 인쇄 화면
+- 2026-08-19 KST | 인쇄 화면·e2e | A4 문제지·정답지 인쇄 화면 추가, Playwright 설정 및 미설정 상태 스모크 테스트 3개 통과 | 다음: 실 자격 증명 설정 후 로그인 골든 패스 e2e 확장

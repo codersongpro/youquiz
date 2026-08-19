@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { useAuth } from "@/components/auth-context";
@@ -103,6 +104,7 @@ export default function QuizPage({ params }: { params: Promise<{ attemptId: stri
     <section className="page">
       <p className="eyebrow">{quiz.video.title}</p>
       <h1>{attempt.status === "completed" ? "Quiz complete" : "Answer each question"}</h1>
+      <Link href={`/quiz/${attemptId}/print`} className="secondary-button">Print worksheet &amp; answer key</Link>
       {lockedCount > 0 && <p className="selected-video">Score so far: {correctCount} / {lockedCount} graded{attempt.status === "completed" ? "" : ` (of ${quiz.questions.length} questions)`}</p>}
       <div className="video-list">
         {quiz.questions.map((question, index) => {
