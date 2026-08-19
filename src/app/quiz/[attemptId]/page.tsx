@@ -1,0 +1,1 @@
+export default function QuizPage({ params }: { params: Promise<{ attemptId: string }> }) { void params; return <section className="page"><p className="eyebrow">Quiz</p><h1>Your quiz is ready</h1><p className="empty-state">The quiz screen loads your saved questions after live Firebase setup is complete.</p></section>; }

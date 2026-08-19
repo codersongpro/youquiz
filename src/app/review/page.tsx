@@ -1,0 +1,1 @@
+export default function ReviewPage() { return <section className="page"><p className="eyebrow">Practice again</p><h1>Review mistakes</h1><p className="empty-state">Sign in to revisit questions that need another look.</p></section>; }

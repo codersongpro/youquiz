@@ -1,0 +1,1 @@
+export default function HistoryPage() { return <section className="page"><p className="eyebrow">Learning record</p><h1>Quiz history</h1><p className="empty-state">Sign in to see completed and in-progress quizzes here.</p></section>; }
