@@ -12,7 +12,7 @@ type YouTubeItem = {
 
 function parseDuration(duration: string): number {
   const match = duration.match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/);
-  if (!match) return 0;
+  if (!match || (!match[1] && !match[2] && !match[3])) return Number.POSITIVE_INFINITY;
   return Number(match[1] ?? 0) * 3600 + Number(match[2] ?? 0) * 60 + Number(match[3] ?? 0);
 }
 

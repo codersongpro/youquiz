@@ -19,6 +19,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ att
     await saveResponse(uid, attemptId, { questionId, type: question.type, answer, isCorrect: null, locked: false, answeredAt: new Date().toISOString() });
     return Response.json({ ok: true });
   } catch (error) {
+    if (error instanceof z.ZodError) return apiError("Invalid answer.", 400);
     return apiError(error instanceof Error && error.message === "RESPONSE_LOCKED" ? "This answer has already been graded." : "Unable to save answer.", error instanceof Error && error.message === "RESPONSE_LOCKED" ? 409 : 401);
   }
 }

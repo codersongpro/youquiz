@@ -3,7 +3,7 @@
 import { getApp, getApps, initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
-import { readPublicFirebaseConfig } from "./server/env";
+import { readPublicFirebaseConfig } from "./public-env";
 
 export function getClientAuth() {
   const config = readPublicFirebaseConfig();

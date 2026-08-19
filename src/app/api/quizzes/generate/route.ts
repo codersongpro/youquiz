@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     const quizId = randomUUID();
     const attemptId = randomUUID();
     const quiz = { id: quizId, video, targetAge: input.targetAge, language: input.language, questions, createdAt };
-    const attempt = { id: attemptId, quizId, status: "in_progress" as const, startedAt: createdAt, updatedAt: createdAt, responses: [] };
+    const attempt = { id: attemptId, quizId, video, status: "in_progress" as const, startedAt: createdAt, updatedAt: createdAt, responses: [] };
     await saveQuizAndAttempt(uid, quiz, attempt);
     return Response.json({ quiz, attempt });
   } catch (error) {

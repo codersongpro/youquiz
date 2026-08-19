@@ -31,7 +31,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ at
       const result = gradedShort.find((item) => item.questionId === question.id);
       return result ? { ...response, isCorrect: result.isCorrect, feedback: result.feedback, locked: true, gradedAt: new Date().toISOString() } : response;
     });
-    await saveGradedResponses(uid, attempt, responses);
+    await saveGradedResponses(uid, attempt, quiz, responses);
     return Response.json({ responses });
   } catch {
     return apiError("Unable to grade answers. Please try again.", 400);
