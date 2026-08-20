@@ -51,8 +51,15 @@ function validateQuestionSet(questions: QuizQuestion[], count: number) {
   }
 }
 
-function interactionText(interaction: { outputs?: Array<{ type: string; text?: string }> }) {
-  const text = interaction.outputs?.filter((output) => output.type === "text").map((output) => output.text ?? "").join("") ?? "";
+type InteractionStep = { type: string; content?: Array<{ type: string; text?: string }> };
+
+function interactionText(interaction: { steps?: InteractionStep[] }) {
+  const text = (interaction.steps ?? [])
+    .filter((step) => step.type === "model_output")
+    .flatMap((step) => step.content ?? [])
+    .filter((part) => part.type === "text")
+    .map((part) => part.text ?? "")
+    .join("");
   if (!text) throw new Error("INVALID_MODEL_OUTPUT");
   return text;
 }
@@ -67,9 +74,8 @@ export async function generateQuiz(videoUrl: string, input: GenerateQuizInput): 
       { type: "video", uri: videoUrl },
       { type: "text", text: prompt }
     ],
-    response_format: jsonSchema(input.questionCount),
-    response_mime_type: "application/json"
-  } as never);
+    response_format: { type: "text", mime_type: "application/json", schema: jsonSchema(input.questionCount) }
+  });
   const parsed = generatedQuizSchema.parse(JSON.parse(interactionText(interaction)));
   validateQuestionSet(parsed.questions, input.questionCount);
   return parsed.questions;
@@ -85,8 +91,11 @@ export async function gradeShortAnswers(items: Array<{ questionId: string; promp
   const interaction = await ai.interactions.create({
     model: config.GEMINI_MODEL,
     input: `Grade each student answer by meaning using the model answer and rubric. Return only JSON. Feedback must be in ${outputLanguage}. ${JSON.stringify(items)}`,
-    response_format: { type: "object", properties: { results: { type: "array", items: { type: "object", properties: { questionId: { type: "string" }, isCorrect: { type: "boolean" }, feedback: { type: "string" } }, required: ["questionId", "isCorrect", "feedback"] } } }, required: ["results"] },
-    response_mime_type: "application/json"
-  } as never);
+    response_format: {
+      type: "text",
+      mime_type: "application/json",
+      schema: { type: "object", properties: { results: { type: "array", items: { type: "object", properties: { questionId: { type: "string" }, isCorrect: { type: "boolean" }, feedback: { type: "string" } }, required: ["questionId", "isCorrect", "feedback"] } } }, required: ["results"] }
+    }
+  });
   return gradeResultSchema.parse(JSON.parse(interactionText(interaction))).results;
 }
