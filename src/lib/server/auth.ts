@@ -1,7 +1,8 @@
 import type { NextRequest } from "next/server";
 
-import { readAllowedEmails } from "./env";
-import { getAdminAuth } from "./firebase-admin";
+import { SESSION_COOKIE_NAME, verifySessionToken } from "./session";
+
+const FAMILY_UID = "family";
 
 export class AuthError extends Error {
   status: number;
@@ -13,12 +14,9 @@ export class AuthError extends Error {
 }
 
 export async function requireUser(request: NextRequest): Promise<string> {
-  const value = request.headers.get("authorization");
-  if (!value?.startsWith("Bearer ")) throw new AuthError("Sign in to continue.", 401);
-  const token = await getAdminAuth().verifyIdToken(value.slice(7));
-  const email = token.email?.toLowerCase();
-  if (!email || !readAllowedEmails().has(email)) throw new AuthError("This Google account isn't allowed to use YouQuiz.", 403);
-  return token.uid;
+  const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
+  if (!(await verifySessionToken(token))) throw new AuthError("Sign in to continue.", 401);
+  return FAMILY_UID;
 }
 
 export function apiError(message: string, status: number) {

@@ -2,13 +2,11 @@
 
 import { useEffect, useState } from "react";
 
-import { useAuth } from "@/components/auth-context";
 import type { QuizDocument } from "@/lib/types";
 
 const choiceLabels = ["A", "B", "C", "D"];
 
 export default function QuizPrintPage({ params }: { params: Promise<{ attemptId: string }> }) {
-  const { ready, token, user } = useAuth();
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [quiz, setQuiz] = useState<QuizDocument | null>(null);
   const [message, setMessage] = useState("");
@@ -17,14 +15,12 @@ export default function QuizPrintPage({ params }: { params: Promise<{ attemptId:
   useEffect(() => { void params.then((value) => setAttemptId(value.attemptId)); }, [params]);
 
   useEffect(() => {
-    if (!attemptId || !ready || !user) return;
+    if (!attemptId) return;
     let cancelled = false;
     (async () => {
       try {
         setLoading(true);
-        const value = await token();
-        if (!value) throw new Error("Please sign in first.");
-        const response = await fetch(`/api/attempts/${attemptId}`, { headers: { Authorization: `Bearer ${value}` } });
+        const response = await fetch(`/api/attempts/${attemptId}`);
         const data = await response.json();
         if (!response.ok) throw new Error(data.error);
         if (cancelled) return;
@@ -37,9 +33,8 @@ export default function QuizPrintPage({ params }: { params: Promise<{ attemptId:
       }
     })();
     return () => { cancelled = true; };
-  }, [attemptId, ready, user, token]);
+  }, [attemptId]);
 
-  if (ready && !user) return <section className="page"><p className="eyebrow">Print</p><h1>Printable quiz</h1><p className="empty-state">Sign in to print this quiz.</p></section>;
   if (loading) return <section className="page"><p className="eyebrow">Print</p><h1>Printable quiz</h1><p className="empty-state">Loading your questions…</p></section>;
   if (!quiz) return <section className="page"><p className="eyebrow">Print</p><h1>Printable quiz</h1><p className="empty-state">{message || "This quiz could not be found."}</p></section>;
 

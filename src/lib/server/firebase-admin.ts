@@ -1,5 +1,4 @@
 import { cert, getApps, initializeApp } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 
 import { readServerConfig } from "./env";
@@ -14,10 +13,6 @@ export function getAdminApp() {
       privateKey: config.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n")
     })
   });
-}
-
-export function getAdminAuth() {
-  return getAuth(getAdminApp());
 }
 
 export function getAdminDb() {

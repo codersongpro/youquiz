@@ -3,19 +3,13 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { useAuth } from "@/components/auth-context";
 import type { AttemptDocument, QuizDocument, StoredResponse } from "@/lib/types";
-
-async function authorizedFetch(token: string, input: RequestInfo | URL, init?: RequestInit) {
-  return fetch(input, { ...init, headers: { ...init?.headers, Authorization: `Bearer ${token}`, "Content-Type": "application/json" } });
-}
 
 function responseFor(attempt: AttemptDocument | null, questionId: string): StoredResponse | undefined {
   return attempt?.responses.find((response) => response.questionId === questionId);
 }
 
 export default function QuizPage({ params }: { params: Promise<{ attemptId: string }> }) {
-  const { ready, token, user } = useAuth();
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [attempt, setAttempt] = useState<AttemptDocument | null>(null);
   const [quiz, setQuiz] = useState<QuizDocument | null>(null);
@@ -28,14 +22,12 @@ export default function QuizPage({ params }: { params: Promise<{ attemptId: stri
   useEffect(() => { void params.then((value) => setAttemptId(value.attemptId)); }, [params]);
 
   useEffect(() => {
-    if (!attemptId || !ready || !user) return;
+    if (!attemptId) return;
     let cancelled = false;
     (async () => {
       try {
         setLoading(true);
-        const value = await token();
-        if (!value) throw new Error("Please sign in first.");
-        const response = await authorizedFetch(value, `/api/attempts/${attemptId}`);
+        const response = await fetch(`/api/attempts/${attemptId}`);
         const data = await response.json();
         if (!response.ok) throw new Error(data.error);
         if (cancelled) return;
@@ -49,16 +41,14 @@ export default function QuizPage({ params }: { params: Promise<{ attemptId: stri
       }
     })();
     return () => { cancelled = true; };
-  }, [attemptId, ready, user, token]);
+  }, [attemptId]);
 
   const saveAnswer = async (questionId: string, type: "multiple_choice" | "short_answer", raw: string) => {
     if (!attemptId || raw.trim() === "") return;
     const answer = type === "multiple_choice" ? Number(raw) : raw.trim();
     try {
       setSavingId(questionId);
-      const value = await token();
-      if (!value) throw new Error("Please sign in first.");
-      const response = await authorizedFetch(value, `/api/attempts/${attemptId}/responses/${questionId}`, { method: "PUT", body: JSON.stringify({ answer }) });
+      const response = await fetch(`/api/attempts/${attemptId}/responses/${questionId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ answer }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
       setAttempt((current) => {
@@ -78,9 +68,7 @@ export default function QuizPage({ params }: { params: Promise<{ attemptId: stri
     if (!attemptId) return;
     try {
       setGrading(true);
-      const value = await token();
-      if (!value) throw new Error("Please sign in first.");
-      const response = await authorizedFetch(value, `/api/attempts/${attemptId}/grade`, { method: "POST" });
+      const response = await fetch(`/api/attempts/${attemptId}/grade`, { method: "POST" });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
       setAttempt((current) => current ? { ...current, responses: data.responses } : current);
@@ -92,7 +80,6 @@ export default function QuizPage({ params }: { params: Promise<{ attemptId: stri
     }
   };
 
-  if (ready && !user) return <section className="page"><p className="eyebrow">Quiz</p><h1>Your quiz is ready</h1><p className="empty-state">Sign in to view this quiz.</p></section>;
   if (loading) return <section className="page"><p className="eyebrow">Quiz</p><h1>Your quiz is ready</h1><p className="empty-state">Loading your questions…</p></section>;
   if (!quiz || !attempt) return <section className="page"><p className="eyebrow">Quiz</p><h1>Your quiz is ready</h1><p className="empty-state">{message || "This quiz could not be found."}</p></section>;
 
