@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { ApiError, GoogleGenAI } from "@google/genai";
 import { z } from "zod";
 
 import { buildGenerationPrompt } from "../generation";
@@ -49,6 +49,10 @@ function validateQuestionSet(questions: QuizQuestion[], count: number) {
     if (question.type === "multiple_choice" && (!question.choices || question.correctIndex === undefined)) throw new Error("INVALID_MODEL_OUTPUT");
     if (question.type === "short_answer" && (!question.modelAnswer || !question.gradingRubric)) throw new Error("INVALID_MODEL_OUTPUT");
   }
+}
+
+export function isGeminiRateLimitError(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 429;
 }
 
 type InteractionStep = { type: string; content?: Array<{ type: string; text?: string }> };

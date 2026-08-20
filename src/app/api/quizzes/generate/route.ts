@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 
 import { validateGenerateQuizInput } from "@/lib/quiz";
 import { apiError, AuthError, requireUser } from "@/lib/server/auth";
-import { generateQuiz } from "@/lib/server/gemini";
+import { generateQuiz, isGeminiRateLimitError } from "@/lib/server/gemini";
 import { saveQuizAndAttempt } from "@/lib/server/store";
 import { getVideoById } from "@/lib/server/youtube-api";
 
@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
     return Response.json({ quiz, attempt });
   } catch (error) {
     if (error instanceof AuthError) return apiError(error.message, error.status);
+    if (isGeminiRateLimitError(error)) return apiError("The AI is at its usage limit right now. Please wait a minute and try again.", 429);
     console.error(error);
     return apiError("Unable to create a quiz. Please try another public video.", 400);
   }
