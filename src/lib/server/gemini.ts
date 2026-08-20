@@ -71,7 +71,7 @@ export async function generateQuiz(videoUrl: string, input: GenerateQuizInput): 
   const interaction = await ai.interactions.create({
     model: config.GEMINI_MODEL,
     input: [
-      { type: "video", uri: videoUrl },
+      { type: "video", uri: videoUrl, resolution: "low" },
       { type: "text", text: prompt }
     ],
     response_format: { type: "text", mime_type: "application/json", schema: jsonSchema(input.questionCount) }
