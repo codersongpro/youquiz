@@ -25,5 +25,6 @@ export function apiError(message: string, status: number) {
 
 export function authErrorResponse(error: unknown, fallbackMessage: string) {
   if (error instanceof AuthError) return apiError(error.message, error.status);
+  console.error(error);
   return apiError(fallbackMessage, 401);
 }

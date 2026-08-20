@@ -16,6 +16,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ att
     return Response.json({ attempt, quiz });
   } catch (error) {
     if (error instanceof AuthError) return apiError(error.message, error.status);
+    console.error(error);
     return apiError("Sign in to view this quiz.", 401);
   }
 }

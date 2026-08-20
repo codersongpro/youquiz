@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
     return Response.json({ quiz, attempt });
   } catch (error) {
     if (error instanceof AuthError) return apiError(error.message, error.status);
+    console.error(error);
     return apiError("Unable to create a quiz. Please try another public video.", 400);
   }
 }

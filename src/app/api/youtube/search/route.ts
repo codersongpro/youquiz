@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
     return Response.json({ videos: await searchVideos(query) });
   } catch (error) {
     if (error instanceof AuthError) return apiError(error.message, error.status);
+    if (!(error instanceof z.ZodError)) console.error(error);
     return apiError(error instanceof z.ZodError ? "Enter 2 to 100 characters." : "Unable to search videos.", error instanceof z.ZodError ? 400 : 401);
   }
 }

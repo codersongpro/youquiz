@@ -14,6 +14,7 @@ export async function POST(request: NextRequest) {
     return video ? Response.json({ video }) : apiError("Use a public, non-live YouTube video of 60 minutes or less.", 400);
   } catch (error) {
     if (error instanceof AuthError) return apiError(error.message, error.status);
+    if (!(error instanceof z.ZodError)) console.error(error);
     return apiError(error instanceof z.ZodError ? "Enter a valid YouTube URL." : "Unable to resolve this video.", error instanceof z.ZodError ? 400 : 401);
   }
 }

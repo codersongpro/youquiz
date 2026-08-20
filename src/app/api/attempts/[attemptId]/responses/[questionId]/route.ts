@@ -21,6 +21,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ att
   } catch (error) {
     if (error instanceof AuthError) return apiError(error.message, error.status);
     if (error instanceof z.ZodError) return apiError("Invalid answer.", 400);
+    if (!(error instanceof Error) || error.message !== "RESPONSE_LOCKED") console.error(error);
     return apiError(error instanceof Error && error.message === "RESPONSE_LOCKED" ? "This answer has already been graded." : "Unable to save answer.", error instanceof Error && error.message === "RESPONSE_LOCKED" ? 409 : 401);
   }
 }

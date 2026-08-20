@@ -35,6 +35,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ at
     return Response.json({ responses });
   } catch (error) {
     if (error instanceof AuthError) return apiError(error.message, error.status);
+    console.error(error);
     return apiError("Unable to grade answers. Please try again.", 400);
   }
 }
