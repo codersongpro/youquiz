@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 
-import { apiError, requireUser } from "@/lib/server/auth";
-import { gradeShortAnswers } from "@/lib/server/gemini";
+import { apiError, AuthError, requireUser } from "@/lib/server/auth";
+import { gradeShortAnswers, isGeminiRateLimitError } from "@/lib/server/gemini";
 import { getAttempt, getQuiz, saveGradedResponses } from "@/lib/server/store";
 
 export const runtime = "nodejs";
@@ -31,9 +31,12 @@ export async function POST(request: NextRequest, context: { params: Promise<{ at
       const result = gradedShort.find((item) => item.questionId === question.id);
       return result ? { ...response, isCorrect: result.isCorrect, feedback: result.feedback, locked: true, gradedAt: new Date().toISOString() } : response;
     });
-    await saveGradedResponses(uid, attempt, responses);
+    await saveGradedResponses(uid, attempt, quiz, responses);
     return Response.json({ responses });
-  } catch {
+  } catch (error) {
+    if (error instanceof AuthError) return apiError(error.message, error.status);
+    if (isGeminiRateLimitError(error)) return apiError("The AI is at its usage limit right now. Please wait a minute and try again.", 429);
+    console.error(error);
     return apiError("Unable to grade answers. Please try again.", 400);
   }
 }

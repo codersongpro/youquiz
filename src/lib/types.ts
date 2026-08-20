@@ -43,9 +43,19 @@ export type StoredResponse = {
 export type AttemptDocument = {
   id: string;
   quizId: string;
+  video: VideoSummary;
   status: "in_progress" | "completed";
   startedAt: string;
   updatedAt: string;
   completedAt?: string;
   responses: StoredResponse[];
+};
+
+export type WrongAnswerRecord = StoredResponse & {
+  attemptId: string;
+  quizId: string;
+  videoTitle: string;
+  prompt: string;
+  explanation: string;
+  updatedAt: string;
 };

@@ -5,7 +5,7 @@ export const questionTypeSchema = z.enum(["multiple_choice", "short_answer"]);
 
 const generateQuizInputSchema = z.object({
   videoId: z.string().regex(/^[A-Za-z0-9_-]{11}$/),
-  targetAge: z.number().int().min(5).max(100),
+  targetAge: z.number().int().min(5).max(20),
   language: quizLanguageSchema.default("en"),
   questionCount: z.number().int().min(1).max(20)
 });

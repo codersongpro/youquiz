@@ -14,9 +14,9 @@ describe("validateGenerateQuizInput", () => {
     ).toMatchObject({ language: "en" });
   });
 
-  it("rejects ages outside 5 through 100", () => {
+  it("rejects ages outside 5 through 20", () => {
     expect(() => validateGenerateQuizInput({ videoId: "abcdefghijk", targetAge: 4, questionCount: 3 })).toThrow();
-    expect(() => validateGenerateQuizInput({ videoId: "abcdefghijk", targetAge: 101, questionCount: 3 })).toThrow();
+    expect(() => validateGenerateQuizInput({ videoId: "abcdefghijk", targetAge: 21, questionCount: 3 })).toThrow();
   });
 
   it("rejects question counts outside 1 through 20", () => {

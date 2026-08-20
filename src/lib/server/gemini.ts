@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { ApiError, GoogleGenAI } from "@google/genai";
 import { z } from "zod";
 
 import { buildGenerationPrompt } from "../generation";
@@ -10,10 +10,10 @@ const generatedQuestionSchema = z.object({
   id: z.string().min(1),
   type: z.enum(["multiple_choice", "short_answer"]),
   prompt: z.string().min(1),
-  choices: z.array(z.string().min(1)).length(4).optional(),
+  choices: z.array(z.string()).length(4).optional(),
   correctIndex: z.number().int().min(0).max(3).optional(),
-  modelAnswer: z.string().min(1).optional(),
-  gradingRubric: z.string().min(1).optional(),
+  modelAnswer: z.string().optional(),
+  gradingRubric: z.string().optional(),
   explanation: z.string().min(1)
 });
 
@@ -34,7 +34,7 @@ function jsonSchema(questionCount: number) {
             prompt: { type: "string" }, choices: { type: "array", items: { type: "string" } },
             correctIndex: { type: "integer" }, modelAnswer: { type: "string" }, gradingRubric: { type: "string" }, explanation: { type: "string" }
           },
-          required: ["id", "type", "prompt", "explanation"]
+          required: ["id", "type", "prompt", "choices", "correctIndex", "modelAnswer", "gradingRubric", "explanation"]
         }
       }
     },
@@ -51,8 +51,19 @@ function validateQuestionSet(questions: QuizQuestion[], count: number) {
   }
 }
 
-function interactionText(interaction: { outputs?: Array<{ type: string; text?: string }> }) {
-  const text = interaction.outputs?.filter((output) => output.type === "text").map((output) => output.text ?? "").join("") ?? "";
+export function isGeminiRateLimitError(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 429;
+}
+
+type InteractionStep = { type: string; content?: Array<{ type: string; text?: string }> };
+
+function interactionText(interaction: { steps?: InteractionStep[] }) {
+  const text = (interaction.steps ?? [])
+    .filter((step) => step.type === "model_output")
+    .flatMap((step) => step.content ?? [])
+    .filter((part) => part.type === "text")
+    .map((part) => part.text ?? "")
+    .join("");
   if (!text) throw new Error("INVALID_MODEL_OUTPUT");
   return text;
 }
@@ -64,11 +75,11 @@ export async function generateQuiz(videoUrl: string, input: GenerateQuizInput): 
   const interaction = await ai.interactions.create({
     model: config.GEMINI_MODEL,
     input: [
-      { type: "video", uri: videoUrl },
+      { type: "video", uri: videoUrl, resolution: "low" },
       { type: "text", text: prompt }
     ],
     response_format: { type: "text", mime_type: "application/json", schema: jsonSchema(input.questionCount) }
-  } as never);
+  });
   const parsed = generatedQuizSchema.parse(JSON.parse(interactionText(interaction)));
   validateQuestionSet(parsed.questions, input.questionCount);
   return parsed.questions;
@@ -84,7 +95,11 @@ export async function gradeShortAnswers(items: Array<{ questionId: string; promp
   const interaction = await ai.interactions.create({
     model: config.GEMINI_MODEL,
     input: `Grade each student answer by meaning using the model answer and rubric. Return only JSON. Feedback must be in ${outputLanguage}. ${JSON.stringify(items)}`,
-    response_format: { type: "text", mime_type: "application/json", schema: { type: "object", properties: { results: { type: "array", items: { type: "object", properties: { questionId: { type: "string" }, isCorrect: { type: "boolean" }, feedback: { type: "string" } }, required: ["questionId", "isCorrect", "feedback"] } } }, required: ["results"] } }
-  } as never);
+    response_format: {
+      type: "text",
+      mime_type: "application/json",
+      schema: { type: "object", properties: { results: { type: "array", items: { type: "object", properties: { questionId: { type: "string" }, isCorrect: { type: "boolean" }, feedback: { type: "string" } }, required: ["questionId", "isCorrect", "feedback"] } } }, required: ["results"] }
+    }
+  });
   return gradeResultSchema.parse(JSON.parse(interactionText(interaction))).results;
 }
