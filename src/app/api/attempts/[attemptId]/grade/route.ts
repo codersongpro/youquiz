@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 
-import { apiError, requireUser } from "@/lib/server/auth";
+import { apiError, AuthError, requireUser } from "@/lib/server/auth";
 import { gradeShortAnswers } from "@/lib/server/gemini";
 import { getAttempt, getQuiz, saveGradedResponses } from "@/lib/server/store";
 
@@ -33,7 +33,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ at
     });
     await saveGradedResponses(uid, attempt, quiz, responses);
     return Response.json({ responses });
-  } catch {
+  } catch (error) {
+    if (error instanceof AuthError) return apiError(error.message, error.status);
     return apiError("Unable to grade answers. Please try again.", 400);
   }
 }

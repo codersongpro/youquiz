@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 
-import { apiError, requireUser } from "@/lib/server/auth";
+import { apiError, AuthError, requireUser } from "@/lib/server/auth";
 import { resolveVideoUrl } from "@/lib/server/youtube-api";
 
 export const runtime = "nodejs";
@@ -13,6 +13,7 @@ export async function POST(request: NextRequest) {
     const video = await resolveVideoUrl(url);
     return video ? Response.json({ video }) : apiError("Use a public, non-live YouTube video of 60 minutes or less.", 400);
   } catch (error) {
+    if (error instanceof AuthError) return apiError(error.message, error.status);
     return apiError(error instanceof z.ZodError ? "Enter a valid YouTube URL." : "Unable to resolve this video.", error instanceof z.ZodError ? 400 : 401);
   }
 }

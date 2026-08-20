@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 
-import { apiError, requireUser } from "@/lib/server/auth";
+import { apiError, AuthError, requireUser } from "@/lib/server/auth";
 import { getAttempt, getQuiz, saveResponse } from "@/lib/server/store";
 
 export const runtime = "nodejs";
@@ -19,6 +19,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ att
     await saveResponse(uid, attemptId, { questionId, type: question.type, answer, isCorrect: null, locked: false, answeredAt: new Date().toISOString() });
     return Response.json({ ok: true });
   } catch (error) {
+    if (error instanceof AuthError) return apiError(error.message, error.status);
     if (error instanceof z.ZodError) return apiError("Invalid answer.", 400);
     return apiError(error instanceof Error && error.message === "RESPONSE_LOCKED" ? "This answer has already been graded." : "Unable to save answer.", error instanceof Error && error.message === "RESPONSE_LOCKED" ? 409 : 401);
   }

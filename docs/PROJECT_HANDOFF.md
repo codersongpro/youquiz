@@ -6,6 +6,7 @@
 - 대상 나이는 5~20세이며, 한국어 출제로 변경할 수 있다.
 - Next.js, Firebase Authentication, Cloud Firestore, Gemini, YouTube Data API, Vercel을 사용한다.
 - Firestore는 서버만 접근하며 API는 Firebase ID 토큰으로 사용자를 확인한다.
+- 가족 전용 서비스이므로 `ALLOWED_EMAILS`에 등록된 Google 계정만 로그인 후 기능을 사용할 수 있다.
 
 ## 현재 상태
 
@@ -29,6 +30,7 @@
 - 클라이언트 번들에 서버 비밀 스키마가 섞이지 않도록 공개용 Firebase 설정 읽기를 `lib/public-env.ts`로 분리했다.
 - `/quiz/[attemptId]/print` 인쇄 화면(A4 문제지 + 정답지, 인쇄용 페이지 나눔 CSS)을 추가하고 응시 화면에서 연결했다.
 - Playwright 설정과 e2e 스모크 테스트를 추가했다 (미설정 상태의 홈·History·Review·Stats 화면 검증, 3개 통과). 크로스 오리진 개발 리소스 경고를 없애기 위해 `next.config.ts`에 `allowedDevOrigins`를 추가했다.
+- 로그인 화이트리스트를 추가했다: `ALLOWED_EMAILS`(콤마 구분 이메일 목록)에 없는 Google 계정은 로그인 자체는 되어도 모든 API가 403으로 거부된다. 값을 비워두면 아무도 접근할 수 없다(기본이 차단). `requireUser`가 던지는 `AuthError`를 모든 API 라우트에서 401/403으로 매핑하도록 정리했다.
 
 ## 진행 중인 작업
 
@@ -36,6 +38,7 @@
 - Gemini `interactions.create` 실 API 호출은 실제 자격 증명으로 아직 검증하지 못했다 (구조화 출력 파싱까지 통합 테스트 필요).
 - Playwright e2e는 미설정(Firebase 미연동) 상태의 화면만 검증한다. 로그인 이후 골든 패스(응시·채점·기록)는 실 자격 증명 없이는 자동화할 수 없다.
 - 인쇄 화면은 브라우저의 실제 인쇄 미리보기로는 아직 확인하지 못했다 (수동 확인 필요).
+- 허용되지 않은 계정으로 로그인했을 때 화면에는 API 오류 메시지만 뜨고 자동 로그아웃은 되지 않는다 (기능은 완전히 막히지만 UX 다듬기는 남아 있음).
 
 ## 다음 작업
 
@@ -48,12 +51,13 @@
 - Firebase 전용 프로젝트 생성 필요
 - Google 로그인 제공자와 승인 도메인 설정 필요
 - Gemini API 및 YouTube Data API 키 설정 필요
+- `ALLOWED_EMAILS`에 로그인을 허용할 가족 Google 계정 이메일을 콤마로 구분해 등록 필요 (예: `a@gmail.com,b@gmail.com`)
 - Vercel 환경 변수 설정 필요
 
 ## 검증 기록
 
 - ESLint 9: 통과 확인 (Next.js 16.3.1 + eslint-config-next 16.3.1)
-- 단위 테스트: 16개 통과 확인
+- 단위 테스트: 18개 통과 확인
 - TypeScript 검사: 통과 확인
 - Next.js 16.3.1 Production build (Turbopack): 통과 확인
 - Playwright e2e: 스모크 테스트 3개 통과 확인 (미설정 상태 화면만; 로그인 이후 플로우는 미검증)
@@ -64,3 +68,4 @@
 - 2026-08-18 KST | 도메인·API·초기 UI | 단위 테스트 16개와 Next.js 15 build 통과 | 다음: 응시·기록·PDF 및 최신 의존성 재검증
 - 2026-08-19 KST | 코드 리뷰·버그 수정·응시 화면 | 대상 나이 5~20세로 조정, Gemini 응답 스키마 버그 등 4건 수정, 응시·기록·오답·통계 화면을 API에 연결, Next.js 16/ESLint 9 전체 검증 통과 | 다음: 실 Firebase·Gemini 연동 검증과 PDF 인쇄 화면
 - 2026-08-19 KST | 인쇄 화면·e2e | A4 문제지·정답지 인쇄 화면 추가, Playwright 설정 및 미설정 상태 스모크 테스트 3개 통과 | 다음: 실 자격 증명 설정 후 로그인 골든 패스 e2e 확장
+- 2026-08-19 KST | 로그인 화이트리스트 | `ALLOWED_EMAILS` 기반 접근 제어 추가(기본 차단), 모든 API 라우트의 인증 오류 처리를 `AuthError`로 통일, 단위 테스트 18개로 확대 | 다음: 실 Firebase 계정으로 허용/차단 동작 확인

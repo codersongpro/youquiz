@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import { NextRequest } from "next/server";
 
 import { validateGenerateQuizInput } from "@/lib/quiz";
-import { apiError, requireUser } from "@/lib/server/auth";
+import { apiError, AuthError, requireUser } from "@/lib/server/auth";
 import { generateQuiz } from "@/lib/server/gemini";
 import { saveQuizAndAttempt } from "@/lib/server/store";
 import { getVideoById } from "@/lib/server/youtube-api";
@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
     await saveQuizAndAttempt(uid, quiz, attempt);
     return Response.json({ quiz, attempt });
   } catch (error) {
-    return apiError(error instanceof Error && error.message === "UNAUTHENTICATED" ? "Sign in to create a quiz." : "Unable to create a quiz. Please try another public video.", error instanceof Error && error.message === "UNAUTHENTICATED" ? 401 : 400);
+    if (error instanceof AuthError) return apiError(error.message, error.status);
+    return apiError("Unable to create a quiz. Please try another public video.", 400);
   }
 }
