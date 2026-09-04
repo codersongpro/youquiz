@@ -31,9 +31,9 @@ export default function ReviewPage() {
       <h1>Review mistakes</h1>
       {message && <p className="empty-state">{message}</p>}
       {items && items.length > 0 && (
-        <div className="video-list">
+        <div className="review-list">
           {items.map((item) => (
-            <div key={`${item.attemptId}_${item.questionId}`} className="video-card">
+            <div key={`${item.attemptId}_${item.questionId}`} className="review-item">
               <span>{item.prompt}</span>
               <small>{item.videoTitle}</small>
               <small>Your answer: {item.answer}</small>

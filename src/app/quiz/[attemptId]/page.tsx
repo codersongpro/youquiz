@@ -93,13 +93,13 @@ export default function QuizPage({ params }: { params: Promise<{ attemptId: stri
       <h1>{attempt.status === "completed" ? "Quiz complete" : "Answer each question"}</h1>
       <Link href={`/quiz/${attemptId}/print`} className="secondary-button">Print worksheet &amp; answer key</Link>
       {lockedCount > 0 && <p className="selected-video">Score so far: {correctCount} / {lockedCount} graded{attempt.status === "completed" ? "" : ` (of ${quiz.questions.length} questions)`}</p>}
-      <div className="video-list">
+      <div className="quiz-questions">
         {quiz.questions.map((question, index) => {
           const saved = responseFor(attempt, question.id);
           const draft = drafts[question.id] ?? (typeof saved?.answer === "string" ? saved.answer : saved?.answer !== undefined ? String(saved.answer) : "");
           const locked = Boolean(saved?.locked);
           return (
-            <div key={question.id} className="video-card">
+            <div key={question.id} className="quiz-question">
               <strong>{index + 1}. {question.prompt}</strong>
               {question.type === "multiple_choice" ? (
                 <fieldset>
